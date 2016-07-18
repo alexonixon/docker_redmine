@@ -1,0 +1,52 @@
+<%= form_tag({}) do -%>
+	<%= hidden_field_tag 'back_url', url_for(params) %>
+	<%= hidden_field_tag 'project_id', @project.id if @project %>
+		<table class="contacts expenses index">
+		<tbody>
+	    <% @expenses.each do |expense| %>
+			<tr class="hascontextmenu">
+				<td class="checkbox">
+					<%= check_box_tag("ids[]", expense.id, false, :id => nil)  %>
+				</td>
+				<td class="status">
+				  <%= expense_status_tag(expense) %>
+				</td>
+				<% if expense.contact %>
+				<td class="avatar">
+					<%= contact_tag(expense.contact, :type => :avatar, :size => 32) %>
+				</td>
+				<% end %>
+				<td class="name expense-name" <%= 'colspan=2' unless expense.contact %>>
+						<h1 class="expense_number"><%= link_to  "#{format_date(expense.expense_date)}#{' - ' + expense.description unless expense.description.blank?}", {:controller => :expenses, :action => :edit, :id => expense.id} %></h1>
+						<h2>
+							<%= contact_tag(expense.contact, :type => 'plain') unless expense.contact.blank? %>
+						</h2>
+				</td>
+
+				<td class="info expense-info">
+					<div class="expense-sum"><strong><%= expense.price_to_s  %></strong>
+
+					</div>
+					<div class="expense-date" >
+						<strong><%# l(:field_expense_date) + ":" %></strong> <%= format_date(expense.expense_date) %>
+					</div>
+				</td>
+			</tr>
+	    <% end %>
+			<tr class="total">
+				<th/>
+				<th/>
+				<th/>
+ 				<th class="title"> <%= "#{l(:label_total)} (#{@expenses_count}):" %> </th>
+				<th class="sum expenses-sum">
+				  <span style="white-space: nowrap;">
+				  <%= prices_collection_by_currency(@expenses_sum, :hide_zeros => true).join('<br/>').html_safe %>
+					</span>
+				</th>
+			</tr>
+		</tbody>
+	  </table>
+
+<% end %>
+
+

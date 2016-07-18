@@ -1,0 +1,39 @@
+<%= form_tag({}) do -%>
+	<%= hidden_field_tag 'back_url', url_for(params) %>
+	<%= hidden_field_tag 'project_id', @project.id if @project %>
+<div class="autoscroll">
+    <table class="list">
+      <thead>
+      <tr>
+        <th class="checkbox hide-when-print"><%= link_to image_tag('toggle_check.png'), {}, :onclick => 'toggleIssuesSelection(this); return false;',
+                                                           :title => "#{l(:button_check_all)}/#{l(:button_uncheck_all)}" %>
+        </th>
+
+        <%= sort_header_tag('expense_date', :caption => l(:field_expense_date), :default_order => 'desc') %>
+        <%= sort_header_tag('description', :caption => l(:field_description), :default_order => 'desc') %>
+        <%= sort_header_tag('contact', :caption => l(:field_expense_contact)) %>
+        <%= sort_header_tag('price', :caption => l(:field_expense_price)) %>
+        <%= sort_header_tag('status', :caption => l(:field_expense_status), :default_order => 'desc') %>
+      </tr>
+      </thead>
+      <% @expenses.each do |expense| %>
+      <tr style="text-align: center;white-space: nowrap;" class="hascontextmenu expense <%= cycle('odd', 'even') %> status-<%= expense.status_id %>  %>">
+        <td class="checkbox hide-when-print"><%= check_box_tag("ids[]", expense.id, false, :id => nil) %></td>
+        <td class="expense_date"><%= link_to format_date(expense.expense_date) , edit_expense_path(expense.id) %></td>
+        <td class="description" style="text-align:left;width:50%;"><%= expense.description %></td>
+        <td class="contact"><%= !expense.contact.blank? ? link_to_contact(expense.contact).html_safe : "" %></td>
+        <td class="price" style="text-align:right;"><%= expense.price_to_s %></td>
+        <td><%= expense_status_name(expense.status_id) %></td>
+      </tr>
+      <% end %>
+      <tr class="total">
+        <th colspan="3"></th>
+        <th class="title"> <%= "#{l(:label_total)} (#{@expenses_count}):" %> </th>
+        <th class="sum invoices-sum"><%= prices_collection_by_currency(@expenses_sum, :hide_zeros => true).join('<br/>').html_safe %></th>
+        <th></th>
+      </tr>
+    </table>
+</div>
+
+<% end %>
+

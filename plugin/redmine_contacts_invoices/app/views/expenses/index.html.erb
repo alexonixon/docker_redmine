@@ -1,0 +1,103 @@
+<div class="contextual">
+  <%= link_to_if_authorized l(:label_expense_new), {:controller => 'expenses', :action => 'new', :project_id => @project}, :class => 'icon icon-add' %>
+  <%= link_to_if_authorized l(:label_crm_import), { :controller => 'expense_imports', :action => :new, :project_id => @project }, :class => 'icon icon-import', :id => 'import_from_csv' %>
+
+</div>
+
+<h2><%= l(:label_expense_plural) %></h2>
+
+<div class="filters">
+	<%= form_tag({:contoller => "expenses", :action => "index"}, :method => :get,  :id => "query_form") do %>
+		<%= hidden_field_tag('project_id', @project.to_param) if @project %>
+		<% no_filters = expenses_is_no_filters %>
+
+	<fieldset id="filters" class="collapsible <%= 'collapsed' if no_filters %>">
+		<legend onclick="toggleFieldset(this);"><%= l(:label_filter_plural) %></legend>
+		<div style="<%= 'display: none;' if no_filters %>">
+			<p>
+			  <span class="filter-condition">
+					<%= label_tag l(:label_expense_status) + " "  %>
+					<%= select_tag :status_id, collection_for_expense_status_for_select(params[:status_id]) %>
+        </span>
+        <span class="filter-condition">
+          <%= label_tag l(:field_expense_date) + " "%>
+  				<%= select_tag 'period', options_for_period_select(params[:period]) + options_for_select([[l(:label_crm_last_year), 'last_year']], params[:period]) %>
+        </span>
+
+        <% if @project %>
+        <span class="filter-condition">
+  				<%= label_tag l(:label_contact) + " "  %>
+  				<%= select_tag :contact_id, options_for_select(contacts_for_select(@project, :limit => 500), params[:contact_id]), :include_blank => true %>
+        </span>
+        <span class="filter-condition">
+          <%= label_tag l(:field_assigned_to) + " "  %>
+          <%= select_tag :assigned_to_id, options_for_select(@project.assignable_users.collect{|u| [u.name, u.id.to_s]}.insert(0, [""]),  params[:assigned_to_id]) %>
+        </span>
+        <% end %>
+        <span class="filter-condition">
+          <%= label_tag l(:label_invoice_is_billable) + " "%>
+          <%= select_tag 'is_billable', options_for_select([[l(:label_all), ''], [l(:general_text_yes), '1'], [l(:general_text_no), '0']], params[:is_billable]) %>
+        </span>
+			</p>
+
+		</div>
+	</fieldset>
+
+    <fieldset class="collapsible collapsed">
+      <legend onclick="toggleFieldset(this);"><%= l(:label_options) %></legend>
+      <div style="display: none;">
+        <table>
+          <% if expenses_list_style == "list_excerpt" %>
+          <tr>
+            <td><label for='sort'><%= l(:label_sort) %></label></td>
+            <td><%= select_tag('sort',
+                               options_for_select(
+                                 [[]] +
+                                 [[l(:field_expense_status), "#{Expense.table_name}.status_id:desc"],
+                                  [l(:field_expense_date), "expense_date:desc"]],
+                                 params[:sort])
+                       ) %></td>
+          </tr>
+          <% end %>
+          <tr>
+            <td><label for='expenses_list_style'><%= l(:label_crm_list_partial_style) %></label></td>
+            <td><%= select_tag('expenses_list_style', options_for_select([[l(:label_crm_list_excerpt), "list_excerpt"], [l(:label_crm_list_list), "list"]], expenses_list_style)) %></td>
+          </tr>
+        </table>
+      </div>
+    </fieldset>
+	<p class="buttons hide-when-print">
+	  	<%= link_to l(:button_apply), "#", :onclick=>"$('#query_form').submit()", :class => 'icon icon-checked' %>
+    	<%= link_to l(:button_clear), { :set_filter => 1, :project_id => @project }, :class => 'icon icon-reload'  %>
+	</p>
+	<% end %>
+
+</div>
+
+<div id="contact_list" class="expense_list">
+<% if @expenses.empty? %>
+  <p class="nodata"><%= l(:label_no_data) %></p>
+<% else %>
+  <%= render :partial => expenses_list_style %>
+	<p class="pagination"><%= pagination_links_full @expenses_pages, @expenses_count %></p>
+<% end %>
+</div>
+
+<% other_formats_links do |f| %>
+    <%= f.link_to 'CSV', :url => params %>
+<% end %>
+
+<% content_for :sidebar do %>
+  <%= render :partial => 'stat_by_period' %>
+  <%= render :partial => 'stat_by_status' %>
+<% end %>
+
+<% html_title l(:label_expense_plural) %>
+
+<%= context_menu url_for( {:controller => "expenses", :action => "context_menu"} )%>
+
+<% content_for :header_tags do %>
+  <%= javascript_include_tag :contacts, :plugin => 'redmine_contacts' %>
+	<meta name = "format-detection" content = "telephone=no">
+<% end %>
+
